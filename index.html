@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ali Responde</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      text-align: center;
+      padding: 20px;
+      color: black;
+    }
+    h1 {
+      color: #a855f7;
+      text-shadow: 0 0 10px #a855f7, 0 0 20px #d946ef;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .photo {
+        width: 450px;
+      margin-right: 20px;
+      animation: flotar 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 15px #a855f7);
+    }
+    @keyframes flotar {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .dialogue-box {
+      background: linear-gradient(135deg, #5b21b6, #9f1239);
+      border: 2px solid #a855f7;
+      border-radius: 10px;
+      padding: 20px;
+      width: 300px;
+      min-height: 100px;
+      text-align: left;
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s;
+      color: white;
+      text-shadow: 0 0 5px #fff;
+    }
+    .dialogue-box:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #d946ef;
+    }
+    .questions {
+      margin-top: 30px;
+    }
+    .input-field {
+      padding: 10px;
+      width: 250px;
+      border: 2px solid #a855f7;
+      border-radius: 5px;
+      background-color: white;
+      color: black;
+    }
+    .button {
+      margin: 5px;
+      padding: 10px;
+      background: linear-gradient(90deg, #8b5cf6, #ec4899);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #a855f7;
+    }
+    .button:hover {
+      background: linear-gradient(90deg, #7e22ce, #db2777);
+      box-shadow: 0 0 15px #d946ef;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ali Responde</h1>
+  <audio autoplay loop>
+    <source src="audio.mp3" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+  </audio>
+  <div class="name-box" id="name-box">
+    <input type="text" id="nombre-input" class="input-field" placeholder="Tu nombre">
+    <button class="button" onclick="guardarNombre()">Confirmar</button>
+  </div>
+  <div class="container">
+    <img src="ali.png" alt="Ali" class="photo">
+    <div class="dialogue-box" id="dialogue-box">
+      ¡Dime tu nombre primero!
+    </div>
+  </div>
+  <div class="questions">
+    <input type="text" id="pregunta-input" class="input-field" placeholder="Escribe tu pregunta aquí">
+    <button class="button" onclick="enviarPregunta()">Preguntar</button>
+  </div>
+  <script>
+    let userName = "";
+
+    function guardarNombre() {
+      const inputNombre = document.getElementById("nombre-input").value.trim();
+      if (inputNombre) {
+        userName = inputNombre;
+        document.getElementById("dialogue-box").textContent = `¡Hola, ${userName}! Pregunta lo que quieras.`;
+        document.getElementById("name-box").innerHTML = `<p>Bienvenido, <strong>${userName}</strong>!</p>`;
+      }
+    }
+
+    async function enviarPregunta() {
+      if (!userName) {
+        document.getElementById("dialogue-box").textContent = "¡Dime tu nombre primero!";
+        return;
+      }
+
+      const pregunta = document.getElementById("pregunta-input").value;
+      const dialogo = document.getElementById("dialogue-box");
+
+      if (!pregunta) {
+        dialogo.textContent = "¡Escribe una pregunta primero!";
+        return;
+      }
+
+      dialogo.textContent = "Pensando...";
+      try {
+        const respuesta = await obtenerRespuestaDeIA(pregunta);
+        dialogo.textContent = respuesta;
+      } catch (error) {
+        dialogo.textContent = "¡Ups! Algo salió mal. Intenta de nuevo.";
+        console.error(error);
+      }
+    }
+
+    async function obtenerRespuestaDeIA(pregunta) {
+      const API_KEY = "AIzaSyDOeaaZe7-O4GN231KHGFQez6ZeoCIYjiA";
+      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Responde de forma graciosa y satírica a ${userName} sobre esto: ${pregunta}` }] }]
+        })
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error.message);
+      return `Ali: ${data.candidates[0].content.parts[0].text.trim()}`;
+    }
+  </script>
+</body>
+</html>
